@@ -1,0 +1,27 @@
+[workspace]
+resolver = "2"
+members = ["crates/s3-core", "crates/s3ui"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[workspace.dependencies]
+s3-core = { path = "crates/s3-core" }
+gpui = "0.2.2"
+aws-sdk-s3 = { version = "1", features = ["behavior-version-latest"] }
+tokio = { version = "1", features = ["rt-multi-thread", "sync"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+dirs = "5"
+chrono = "0.4"
+
+# 开发时更快重编译；发布体积优化
+[profile.dev]
+debug = 1
+
+[profile.release]
+lto = "thin"
+strip = "symbols"

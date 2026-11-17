@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- s3ui logo · Kami design language:
+       warm parchment tile, single ink-blue accent, flat, no gradients/shadows.
+       Motif: an object (dot) hovering above an open bucket = object storage. -->
+  <rect width="256" height="256" rx="56" fill="#f5f4ed"/>
+  <rect x="1" y="1" width="254" height="254" rx="55" fill="none" stroke="#d8d5c8" stroke-width="2"/>
+
+  <!-- the object, about to be placed -->
+  <circle cx="128" cy="74" r="16" fill="#1b365d"/>
+
+  <!-- the bucket, open top, outlined -->
+  <path d="M64 108 h128 l-11 82 a16 16 0 0 1 -16 14 H91 a16 16 0 0 1 -16 -14 Z"
+        fill="none" stroke="#1b365d" stroke-width="14" stroke-linejoin="round"/>
+</svg>

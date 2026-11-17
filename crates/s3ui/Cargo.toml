@@ -1,0 +1,23 @@
+[package]
+name = "s3ui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Multi-platform S3-compatible object storage manager, built with gpui."
+
+[[bin]]
+name = "s3ui"
+path = "src/main.rs"
+
+[dependencies]
+s3-core.workspace = true
+gpui.workspace = true
+chrono.workspace = true
+unicode-segmentation = "1"
+dirs = "5"
+image = "0.25"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+gpui = { workspace = true, features = ["test-support"] }

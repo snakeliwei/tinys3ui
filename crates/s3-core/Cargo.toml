@@ -1,0 +1,17 @@
+[package]
+name = "s3-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "S3-compatible storage service layer: tokio runtime + AWS S3 SDK, decoupled from any UI."
+
+[dependencies]
+aws-sdk-s3.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+dirs.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt"] }

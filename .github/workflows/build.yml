@@ -1,0 +1,86 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build (${{ matrix.artifact }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # arm64 runner 上交叉编译双架构，lipo 合成通用二进制
+          - os: macos-latest
+            artifact: macos-universal
+          - os: windows-latest
+            artifact: windows-x86_64
+          - os: ubuntu-latest
+            artifact: linux-x86_64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Add macOS targets (universal binary)
+        if: runner.os == 'macOS'
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      # gpui 0.2 在 Linux 需要 wayland/xkbcommon/xcb/fontconfig 头文件
+      # （blade 的 Vulkan 走 dlopen，编译期无需系统库）
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config file curl libssl-dev \
+            libxkbcommon-dev libxkbcommon-x11-dev libxcb1-dev libx11-dev \
+            libwayland-dev wayland-protocols \
+            libfontconfig1-dev libfreetype-dev
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build (macOS universal)
+        if: runner.os == 'macOS'
+        run: |
+          cargo build --release --locked --target aarch64-apple-darwin --target x86_64-apple-darwin
+          mkdir -p dist
+          lipo -create -output dist/s3ui \
+            target/aarch64-apple-darwin/release/s3ui \
+            target/x86_64-apple-darwin/release/s3ui
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cargo build --release --locked
+          mkdir dist
+          copy target\release\s3ui.exe dist\
+
+      - name: Build (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cargo build --release --locked
+          mkdir -p dist
+          cp target/release/s3ui dist/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: s3ui-${{ matrix.artifact }}
+          path: dist/*
+          if-no-files-found: error
