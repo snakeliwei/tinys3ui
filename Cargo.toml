@@ -1,10 +1,12 @@
 [workspace]
 resolver = "2"
-members = ["crates/s3-core", "crates/s3ui", "crates/xattr"]
+members = ["crates/s3-core", "crates/s3ui"]
 
 # xattr 0.2.3 修复 fork（ENOATTR 在新版 libc 的 linux-gnu 目标已移除，上游
 # 0.2 线停更）。详见 crates/xattr/Cargo.toml 顶部注释。
-# gpui 改用 xattr 1.x 或移除 zed-async-tar 后，连同成员与 crates/xattr 一并删除。
+# 注意：刻意【不是】workspace member——zed-async-tar 只在 cfg(unix) 下依赖
+# xattr，member 化会导致 Windows 强制构建这个 unix-only crate 而 E0433；
+# path 依赖不被需要时不构建。gpui 升级后连同 crates/xattr 一并删除。
 [patch.crates-io]
 xattr = { path = "crates/xattr" }
 
