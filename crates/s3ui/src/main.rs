@@ -1,3 +1,6 @@
+// Windows 发布版不随窗口启动控制台（debug 构建保留，便于 cargo run 看日志）
+#![cfg_attr(all(target_os = "windows", not(debug_assertions)), windows_subsystem = "windows")]
+
 mod assets;
 mod i18n;
 mod settings;

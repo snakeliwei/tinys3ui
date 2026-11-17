@@ -28,7 +28,9 @@ jobs:
             artifact: macos-universal
           - os: windows-latest
             artifact: windows-x86_64
-          - os: ubuntu-latest
+          # ubuntu-latest 自 2026-10-19 起指向 Ubuntu 26.04，gpui 尚未在其上验证过，
+          # 先钉在 24.04（Zed 官方支持的环境）
+          - os: ubuntu-24.04
             artifact: linux-x86_64
 
     steps:
@@ -75,9 +77,17 @@ jobs:
       - name: Build (Linux)
         if: runner.os == 'Linux'
         run: |
-          cargo build --release --locked
+          cargo build --release --locked 2>&1 | tee build.log
           mkdir -p dist
           cp target/release/s3ui dist/
+
+      - name: Upload build log (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-${{ matrix.artifact }}
+          path: build.log
+          if-no-files-found: ignore
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
