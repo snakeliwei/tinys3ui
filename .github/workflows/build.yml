@@ -3,6 +3,7 @@ name: Build
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -84,3 +85,39 @@ jobs:
           name: s3ui-${{ matrix.artifact }}
           path: dist/*
           if-no-files-found: error
+
+  # 打 v* tag 时:构建完成后自动创建 GitHub Release 并挂上三平台二进制
+  release:
+    name: Release ${{ github.ref_name }}
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Rename binaries with version
+        run: |
+          cd artifacts
+          v=${GITHUB_REF_NAME}
+          mv s3ui-macos-universal/s3ui      "s3ui-$v-macos-universal"
+          mv s3ui-windows-x86_64/s3ui.exe   "s3ui-$v-windows-x86_64.exe"
+          mv s3ui-linux-x86_64/s3ui         "s3ui-$v-linux-x86_64"
+          ls -R
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/s3ui-${{ github.ref_name }}-macos-universal
+            artifacts/s3ui-${{ github.ref_name }}-windows-x86_64.exe
+            artifacts/s3ui-${{ github.ref_name }}-linux-x86_64
+          generate_release_notes: true
+          # v0.1.0-rc1 这类带 "-" 的 semver 预发布版自动标记 prerelease
+          prerelease: ${{ contains(github.ref_name, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
